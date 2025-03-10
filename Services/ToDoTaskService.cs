@@ -14,67 +14,54 @@ namespace ProjetoTasks.Services
         //{
         //    _context = context;
         //}
-
-        public async Task AddTask(string title, string description)
+        private async Task<ToDoTask> GetToDoTask(int id)
+        {
+            var todotask = await Context.ToDoTasks.FindAsync(id);
+            if (todotask != null)
+            {
+                return todotask;
+            }
+            throw new InvalidOperationException("Task not found.");
+        }
+        public async Task AddTask(string title, string description, int userid)
         {
             var toDoTask = new ToDoTask(title, description);
+            toDoTask.UserId = userid;
             await Context.ToDoTasks.AddAsync(toDoTask);
             await Context.SaveChangesAsync();
         }
         public async Task EditTask(int id, string title, string description)
         {
-            var todotask = await Context.ToDoTasks.FindAsync(id);
-            if (todotask != null)
-            {
-                todotask.Title = title;
-                todotask.Description = description;
-                Context.Update(todotask);
-                await Context.SaveChangesAsync();
-            }
-            else
-            {
-                throw new InvalidOperationException("Cannot edit a task that doesn't exist.");
-            }
+            var todotask = await GetToDoTask(id);
+            todotask.Title = title;
+            todotask.Description = description;
+            Context.Update(todotask);
+            await Context.SaveChangesAsync();
         }
         public async Task RemoveTask(int id)
         {
-            var todotask = await Context.ToDoTasks.FindAsync(id);
-            if (todotask != null)
-            {
-                Context.Remove(todotask);
-                await Context.SaveChangesAsync();
-            }
-            else
-            {
-                throw new InvalidOperationException("Cannot remove a task that doesn't exist.");
-            }
+            var todotask = await GetToDoTask(id);
+            Context.Remove(todotask);
+            await Context.SaveChangesAsync();
         }
 
         public async Task MarkAsComplete(int id)
         {
-            var todotask = await Context.ToDoTasks.FindAsync(id);
-            if (todotask != null)
-            {
-                todotask.IsCompleted = true;
-                Context.Update(todotask);
-                await Context.SaveChangesAsync();
-            }
-            else
-            {
-                throw new InvalidOperationException("Cannot complete a task that doesn't exist.");
-            }
+            var todotask = await GetToDoTask(id);
+            todotask.IsCompleted = true;
+            Context.Update(todotask);
+            await Context.SaveChangesAsync();
         }
 
-        public async Task<List<ToDoTask>> GetAllTasks()
+        public Task<List<ToDoTask>> GetAllUserTasks(int userid)
         {
-            var allTasks = await Context.ToDoTasks.ToListAsync();
-            return allTasks;
+            return Context.ToDoTasks.Where(x => x.UserId == userid).ToListAsync();
         }
 
-        public async Task<bool> DoesExist(int id)
+        public Task<bool> DoesExist(int id, int userid)
         {
-            var todotask = await Context.ToDoTasks.FindAsync(id);
-            return todotask != null;
+            //var todotask = await Context.ToDoTasks.FindAsync(id);
+            return Context.ToDoTasks.AnyAsync(x => x.UserId == userid && x.Id == id);
         }
     }
 }

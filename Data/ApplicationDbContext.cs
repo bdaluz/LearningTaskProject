@@ -6,7 +6,7 @@ namespace ProjetoTasks.Data
     internal class ApplicationDbContext : DbContext
     {
         public DbSet<ToDoTask> ToDoTasks { get; set; }
-
+        public DbSet<User> Users { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

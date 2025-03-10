@@ -12,6 +12,9 @@ namespace ProjetoTasks.Models
 
         public bool IsCompleted { get; set; } = false;
 
+        public User User { get; set; }
+        public int UserId { get; set; }
+
         public ToDoTask(string title, string description)
         {
             Title = title;
