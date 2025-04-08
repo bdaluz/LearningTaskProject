@@ -1,11 +1,10 @@
-﻿using ProjetoTasks.Models;
-using ProjetoTasks.Services;
+﻿using Services.Models;
 
 namespace ProjetoTasks.Menus
 {
-    internal class UserMenu
+    internal class UserMenu(IUserService usersvc)
     {
-        public async Task<int> Menu(UserService usersvc)
+        public async Task<int> Menu()
         {
 
             while (true)
@@ -24,7 +23,7 @@ namespace ProjetoTasks.Menus
                     switch (choice)
                     {
                         case 1:
-                            User user = await Login(usersvc);
+                            User user = await Login();
                             if (user != null)
                             {
                                 Console.WriteLine("\nLogged in\n");
@@ -32,7 +31,7 @@ namespace ProjetoTasks.Menus
                             }
                             break;
                         case 2:
-                            User userlogged = await Signup(usersvc);
+                            User userlogged = await Signup();
                             if (userlogged != null)
                             {
                                 Console.WriteLine("\nLogged in\n");
@@ -40,7 +39,7 @@ namespace ProjetoTasks.Menus
                             }
                             break;
                         case 3:
-                            await ResetUserPassword(usersvc);
+                            await ResetUserPassword();
                             break;
                         default:
                             Console.WriteLine("\nInvalid option.\n");
@@ -53,7 +52,7 @@ namespace ProjetoTasks.Menus
                 }
             }
         }
-        static async Task<User> Login(UserService usersvc)
+        public async Task<User?> Login()
         {
             Console.WriteLine("Login");
             Console.Write("Username: ");
@@ -73,7 +72,7 @@ namespace ProjetoTasks.Menus
             }
         }
 
-        static async Task<User> Signup(UserService usersvc)
+        public async Task<User?> Signup()
         {
             Console.WriteLine("Sign up");
 
@@ -106,7 +105,7 @@ namespace ProjetoTasks.Menus
             }
         }
 
-        static async Task ResetUserPassword(UserService usersvc)
+        public async Task ResetUserPassword()
         {
             Console.WriteLine("Password reset");
 

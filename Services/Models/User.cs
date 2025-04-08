@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace ProjetoTasks.Models
+namespace Services.Models
 {
-    internal class User
+    public class User
     {
         [Key]
         public int Id { get; set; }

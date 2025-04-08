@@ -1,9 +1,8 @@
-﻿
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
-namespace ProjetoTasks.Models
+namespace Services.Models
 {
-    internal class ToDoTask
+    public class ToDoTask
     {
         [Key]
         public int Id { get; set; }
