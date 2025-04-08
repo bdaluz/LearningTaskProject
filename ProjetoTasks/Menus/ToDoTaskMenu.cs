@@ -1,14 +1,10 @@
-﻿using ProjetoTasks.Models;
-using ProjetoTasks.Services;
-
-
-namespace ProjetoTasks.Menus
+﻿namespace ProjetoTasks.Menus
 {
-    internal class ToDoTaskMenu
+    internal class ToDoTaskMenu(IToDoTaskService todoservice)
     {
-        public async Task Menu(ToDoTaskService todoservice, int userid)
+        public async Task Menu(int userid)
         {
-            await ShowTasks(todoservice, userid);
+            await ShowTasks(userid);
 
             while (true)
             {
@@ -30,19 +26,19 @@ namespace ProjetoTasks.Menus
                     switch (choice)
                     {
                         case 1:
-                            await AddTask(todoservice, userid);
+                            await AddTask(userid);
                             break;
                         case 2:
-                            await EditTask(todoservice, userid);
+                            await EditTask(userid);
                             break;
                         case 3:
-                            await RemoveTask(todoservice, userid);
+                            await RemoveTask(userid);
                             break;
                         case 4:
-                            await CompleteTask(todoservice, userid);
+                            await CompleteTask(userid);
                             break;
                         case 5:
-                            await ShowTasks(todoservice, userid);
+                            await ShowTasks(userid);
                             break;
                         case 6:
                             return;
@@ -58,7 +54,7 @@ namespace ProjetoTasks.Menus
             }
         }
 
-        static async Task AddTask(ToDoTaskService todoservice, int userid)
+        public async Task AddTask(int userid)
         {
             Console.WriteLine("Add a task\n");
             Console.Write("Title: ");
@@ -71,16 +67,17 @@ namespace ProjetoTasks.Menus
         }
 
 
-        static async Task EditTask(ToDoTaskService todoservice, int userid)
+        public async Task EditTask(int userid)
         {
-            await ShowTasks(todoservice, userid);
+            if (!await CheckForTasks(userid)) return;
+            await ShowTasks(userid);
             Console.WriteLine();
             Console.WriteLine("Edit a task\n");
             Console.Write("Enter the ID of the task you'd like to edit: ");
             string id = Console.ReadLine().Trim();
             try
             {
-                if (!await todoservice.DoesExist(int.Parse(id), userid))
+                if (!await todoservice.UserDoesExist(int.Parse(id), userid))
                 {
                     Console.WriteLine("\nCannot edit a task that doesn't exist.\n");
                     return;
@@ -112,16 +109,17 @@ namespace ProjetoTasks.Menus
             }
         }
 
-        static async Task RemoveTask(ToDoTaskService todoservice, int userid)
+        public async Task RemoveTask(int userid)
         {
-            await ShowTasks(todoservice, userid);
+            if (!await CheckForTasks(userid)) return;
+            await ShowTasks(userid);
             Console.WriteLine();
             Console.WriteLine("Edit a task\n");
             Console.Write("Enter the ID of the task you'd like to remove: ");
             string id = Console.ReadLine().Trim();
             try
             {
-                if (!await todoservice.DoesExist(int.Parse(id), userid))
+                if (!await todoservice.UserDoesExist(int.Parse(id), userid))
                 {
                     Console.WriteLine("\nCannot remove a task that doesn't exist.\n");
                     return;
@@ -147,16 +145,17 @@ namespace ProjetoTasks.Menus
             }
         }
 
-        static async Task CompleteTask(ToDoTaskService todoservice, int userid)
+        public async Task CompleteTask(int userid)
         {
-            await ShowTasks(todoservice, userid);
+            if (!await CheckForTasks(userid)) return;
+            await ShowTasks(userid);
             Console.WriteLine();
             Console.WriteLine("Complete a task\n");
             Console.Write("Enter the ID of the task you'd like to mark as completed: ");
             string id = Console.ReadLine().Trim();
             try
             {
-                if (!await todoservice.DoesExist(int.Parse(id), userid))
+                if (!await todoservice.UserDoesExist(int.Parse(id), userid))
                 {
                     Console.WriteLine("\nCannot complete a task that doesn't exist.\n");
                     return;
@@ -164,7 +163,7 @@ namespace ProjetoTasks.Menus
                 else
                 {
                     await todoservice.MarkAsComplete(int.Parse(id));
-                    await ShowTasks(todoservice, userid);
+                    await ShowTasks(userid);
                 }
             }
             catch (FormatException e)
@@ -183,8 +182,9 @@ namespace ProjetoTasks.Menus
         }
 
 
-        static async Task ShowTasks(ToDoTaskService todoservice, int userid)
+        public async Task ShowTasks(int userid)
         {
+            if (!await CheckForTasks(userid)) return;
             Console.WriteLine("All tasks:\n");
             var tasks = await todoservice.GetAllUserTasks(userid);
             if (tasks.Any())
@@ -198,6 +198,16 @@ namespace ProjetoTasks.Menus
             {
                 Console.WriteLine("No task found.\n");
             }
+        }
+
+        public async Task<bool> CheckForTasks(int userid)
+        {
+            if (await todoservice.TaskDoesExist(userid))
+            {
+                return true;
+            }
+            Console.WriteLine("\nYou have no tasks.");
+            return false;
         }
     }
 }

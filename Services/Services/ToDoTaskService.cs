@@ -1,19 +1,11 @@
-﻿
+﻿using Microsoft.EntityFrameworkCore;
+using Services.Data;
+using Services.Models;
 
-using Microsoft.EntityFrameworkCore;
-using ProjetoTasks.Data;
-using ProjetoTasks.Models;
-using System.Diagnostics.Metrics;
-
-namespace ProjetoTasks.Services
+namespace Services.Services
 {
-    internal class ToDoTaskService(ApplicationDbContext Context)
+    public class ToDoTaskService(ApplicationDbContext Context) : IToDoTaskService
     {
-        //private ApplicationDbContext _context;
-        //public ToDoTaskService(ApplicationDbContext context)
-        //{
-        //    _context = context;
-        //}
         private async Task<ToDoTask> GetToDoTask(int id)
         {
             var todotask = await Context.ToDoTasks.FindAsync(id);
@@ -58,10 +50,15 @@ namespace ProjetoTasks.Services
             return Context.ToDoTasks.Where(x => x.UserId == userid).ToListAsync();
         }
 
-        public Task<bool> DoesExist(int id, int userid)
+        public Task<bool> UserDoesExist(int id, int userid)
         {
             //var todotask = await Context.ToDoTasks.FindAsync(id);
             return Context.ToDoTasks.AnyAsync(x => x.UserId == userid && x.Id == id);
+        }
+
+        public Task<bool> TaskDoesExist(int userid)
+        {
+            return Context.ToDoTasks.AnyAsync(x => x.UserId == userid);
         }
     }
 }

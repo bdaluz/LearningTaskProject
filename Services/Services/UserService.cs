@@ -1,14 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using ProjetoTasks.Data;
-using ProjetoTasks.Models;
+using Services.Data;
+using Services.Models;
 using System.Net.Mail;
 using System.Net;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
-namespace ProjetoTasks.Services
+namespace Services.Services
 {
-    internal class UserService(ApplicationDbContext Context)
+    public class UserService(ApplicationDbContext Context) : IUserService
     {
         private async Task<User> GetUsername(string username)
         {
@@ -17,7 +16,7 @@ namespace ProjetoTasks.Services
             {
                 return user;
             }
-            throw new InvalidOperationException("\nUser not found.");
+            throw new InvalidOperationException("User not found.");
         }
 
         private async Task<User> GetUserByEmail(string email)
@@ -27,13 +26,13 @@ namespace ProjetoTasks.Services
             {
                 return user;
             }
-            throw new InvalidOperationException("\nUser not found.");
+            throw new InvalidOperationException("User not found.");
         }
 
 
         public async Task AddUser(string username, string email, string password)
         {
-            string passwordHash = BCrypt.Net.BCrypt.EnhancedHashPassword(password, 15);
+            string passwordHash = BCrypt.Net.BCrypt.EnhancedHashPassword(password, 11);
             var user = new User(username, email, passwordHash);
             await Context.Users.AddAsync(user);
             await Context.SaveChangesAsync();
@@ -77,7 +76,7 @@ namespace ProjetoTasks.Services
             {
                 return user;
             }
-            throw new InvalidOperationException("\nIncorrect password.");
+            throw new InvalidOperationException("Incorrect password.");
         }
 
         public async Task<bool> ValidateUsername(string username)
@@ -114,11 +113,12 @@ namespace ProjetoTasks.Services
         }
 
 
-        public async Task SendPasswordResetToken(string email)
+        public async Task<string> GetPasswordResetToken(string email)
         {
             var user = await GetUserByEmail(email);
             await CreateToken(user);
-            await SendPasswordResetEmail(email, user.Token);
+            return user.Token;
+            //await SendPasswordResetEmail(email, user.Token);
         }
 
         public async Task CreateToken(User user)
@@ -129,76 +129,10 @@ namespace ProjetoTasks.Services
             await Context.SaveChangesAsync();
         }
 
-        public class Config
-        {
-            public string Email { get; set; }
-            public string SmtpPassword { get; set; }
-            public string SmtpServer { get; set; }
-            public int SmtpPort { get; set; }
-        }
-
-        public async Task<Config> LoadConfig()
-        {
-            string currentDirectory = Directory.GetCurrentDirectory();
-            string projectRootPath = Directory.GetParent(Directory.GetParent(Directory.GetParent(currentDirectory).FullName).FullName).FullName;
-            string configFilePath = Path.Combine(projectRootPath, "config.json");
-            if (File.Exists(configFilePath))
-            {
-                string json = File.ReadAllText(configFilePath);
-                return JsonConvert.DeserializeObject<Config>(json);
-            }
-            throw new Exception("Email config file not found.");
-        }
-
-        public async Task SendPasswordResetEmail(string email, string token)
-        {
-            try
-            {
-                var config = await LoadConfig();
-
-                string fromEmail = config.Email;
-                string toEmail = email;
-                string smtpPassword = config.SmtpPassword;
-
-                using (MailMessage mail = new MailMessage())
-                {
-                    mail.From = new MailAddress(fromEmail, "TaskProject");
-                    mail.To.Add(toEmail);
-                    mail.Subject = "TaskProject - Password Reset";
-                    mail.IsBodyHtml = true;
-                    mail.Body = @"
-                            <html>
-                                <body>
-                                    <h1>Password Reset</h1>
-                                    <p>Enter your token: <strong>" + token + @"</strong></p>
-                                    <p>Click <a href='https://github.com/bdaluz/LearningTaskProject'>here</a> to reset your password.</p>
-                                    <footer>
-                                        <p>LearningTaskProject Team</p>
-                                    </footer>
-                                </body>
-                            </html>";
-
-                    using (SmtpClient smtpClient = new SmtpClient("smtp.gmail.com"))
-                    {
-                        smtpClient.Port = config.SmtpPort;
-                        smtpClient.Credentials = new NetworkCredential(fromEmail, smtpPassword);
-                        smtpClient.EnableSsl = true;
-
-                        smtpClient.Send(mail);
-                        Console.WriteLine("Password reset email sent!");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error to send email: " + ex.Message);
-            }
-        }
-
         public async Task UpdatePassword(string email, string password)
         {
             var user = await GetUserByEmail(email);
-            string passwordHash = BCrypt.Net.BCrypt.EnhancedHashPassword(password, 15);
+            string passwordHash = BCrypt.Net.BCrypt.EnhancedHashPassword(password, 11);
             user.Password = passwordHash;
             Context.Update(user);
             await Context.SaveChangesAsync();
