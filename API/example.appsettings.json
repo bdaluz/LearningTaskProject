@@ -1,0 +1,23 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*",
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost;Integrated Security=true;Database=TaskProject;TrustServercertificate=true"
+  },
+  "JwtSettings": {
+    "Issuer": "JwtIssuer",
+    "Audience": "JwtAudience",
+    "Key": "Super-secret-giant-password-here"
+  },
+  "EmailSettings": {
+    "email": "youremail@mail.com",
+    "smtpPassword": "YourEmailPasswordOrAppPassword",
+    "smtpServer": "smtp.mail.com",
+    "smtpPort": 587
+  }
+}
