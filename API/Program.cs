@@ -6,6 +6,7 @@ using Microsoft.OpenApi.Models;
 using Services.Data;
 using Services.Interfaces;
 using Services.Services;
+using Services.Settings;
 using System.Text;
 using System.Threading.RateLimiting;
 
@@ -77,6 +78,16 @@ builder.Services.AddSwaggerGen(c =>
 });
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngular", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 builder.Services.AddRateLimiter(options =>
 {
     options.AddFixedWindowLimiter("fixed", opt =>
@@ -98,6 +109,17 @@ builder.Services.AddRateLimiter(options =>
     };
 });
 
+builder.Services.AddOptions<JwtSettings>()
+    .Bind(builder.Configuration.GetSection("JwtSettings"))
+    .ValidateDataAnnotations()
+    .Validate(jwt =>
+        !string.IsNullOrWhiteSpace(jwt.Key) &&
+        !string.IsNullOrWhiteSpace(jwt.Issuer) &&
+        !string.IsNullOrWhiteSpace(jwt.Audience) &&
+        jwt.TokenValidityMins > 0,
+        "Invalid JwtSettings configuration.");
+
+
 builder.Services.AddScoped<IToDoTaskService, ToDoTaskService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -114,7 +136,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseRateLimiter();
 
-app.UseHttpsRedirection();
+app.UseCors("AllowAngular");
+
+//app.UseHttpsRedirection();
 
 app.UseAuthentication();
 

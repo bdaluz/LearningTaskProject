@@ -1,7 +1,9 @@
-﻿namespace Services.Interfaces
+﻿using Services.Models;
+
+namespace Services.Interfaces
 {
     public interface IAuthService
     {
-        string CreateToken(string userId);
+        string CreateToken(User user);
     }
 }

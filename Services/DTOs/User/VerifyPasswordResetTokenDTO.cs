@@ -2,13 +2,8 @@
 
 namespace Services.DTOs.User
 {
-    public class ChangePasswordDTO
+    public class VerifyPasswordResetTokenDTO
     {
-        [Required(ErrorMessage = "Password is required")]
-        [MinLength(8, ErrorMessage = "Password must have at least 8 characters")]
-        [MaxLength(256, ErrorMessage = "Password is too long.")]
-        public required string NewPassword { get; set; }
-
         [Required(ErrorMessage = "Email is required.")]
         public required string Email { get; set; }
 

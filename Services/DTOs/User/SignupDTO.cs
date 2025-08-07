@@ -10,13 +10,14 @@ namespace Services.DTOs.User
         public required string Username { get; set; }
 
         [Required(ErrorMessage = "Email is required")]
-        [EmailAddress(ErrorMessage = "Invalid email format")]
+        [RegularExpression(@"^[^@\s]+@[^@\s]+\.[a-zA-Z]{2,10}$", ErrorMessage = "Invalid email format.")]
         [MinLength(6, ErrorMessage = "Please verify the format of the email provided.")]
         [MaxLength(254, ErrorMessage = "The email provided is invalid.")]
         public required string Email { get; set; }
 
         [Required(ErrorMessage = "Password is required")]
         [MinLength(8, ErrorMessage = "Password must have at least 8 characters")]
+        [MaxLength(256, ErrorMessage = "Password is too long.")]
         public required string Password { get; set; }
     }
 }

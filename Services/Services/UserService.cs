@@ -1,34 +1,36 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Services.Data;
 using Services.Models;
-using System.Net.Mail;
-using System.Net;
-using Newtonsoft.Json;
+using Services.DTOs.User;
+using Services.Exceptions;
 
 namespace Services.Services
 {
     public class UserService(ApplicationDbContext Context) : IUserService
     {
-        private async Task<User> GetUsername(string username)
+        private async Task<User?> GetUsername(string username)
         {
-            var user = await Context.Users.FirstOrDefaultAsync(x => x.Username == username);
+            return await Context.Users.FirstOrDefaultAsync(x => x.Username == username);
+        }
+
+        private async Task<User?> GetUserByEmail(string email)
+        {
+            return await Context.Users.FirstOrDefaultAsync(x => x.Email == email);
+        }
+
+        public async Task<UserBasicInfo> GetUserBasicInfo(int id)
+        {
+            var user = await Context.Users.FirstOrDefaultAsync(x => x.Id == id);
             if (user != null)
             {
-                return user;
+                return new UserBasicInfo
+                {
+                    Username = user.Username,
+                    Email = user.Email
+                };
             }
             throw new InvalidOperationException("User not found.");
         }
-
-        private async Task<User> GetUserByEmail(string email)
-        {
-            var user = await Context.Users.FirstOrDefaultAsync(x => x.Email == email);
-            if (user != null)
-            {
-                return user;
-            }
-            throw new InvalidOperationException("User not found.");
-        }
-
 
         public async Task AddUser(string username, string email, string password)
         {
@@ -68,48 +70,30 @@ namespace Services.Services
             }
         }
 
-        public async Task<User> ValidateLogin(string username, string password)
+        public async Task<User?> ValidateLogin(string username, string password)
         {
             var user = await GetUsername(username);
+            if (user == null) return null;
+
             bool logged = BCrypt.Net.BCrypt.EnhancedVerify(password, user.Password);
-            if (logged)
-            {
-                return user;
-            }
-            throw new InvalidOperationException("Incorrect password.");
+            return logged ? user : null;
         }
 
         public async Task<bool> ValidateUsername(string username)
         {
-            try
-            {
-                var user = await GetUsername(username);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            return await GetUsername(username) != null;
         }
 
         public async Task<bool> ValidateUserEmail(string email)
         {
-            try
-            {
-                var user = await GetUserByEmail(email);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+           return await GetUserByEmail(email) != null;
         }
 
         public async Task<bool> ValidateToken(string email, string token)
         {
             var user = await GetUserByEmail(email);
-            if (user.Token == token) {  return true; }
-            return false;
+            if (user == null) return false;
+            return user.Token == token;
         }
 
 
@@ -118,7 +102,6 @@ namespace Services.Services
             var user = await GetUserByEmail(email);
             await CreateToken(user);
             return user.Token;
-            //await SendPasswordResetEmail(email, user.Token);
         }
 
         public async Task CreateToken(User user)

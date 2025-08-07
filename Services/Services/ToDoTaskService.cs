@@ -1,30 +1,30 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Services.Data;
 using Services.Models;
+using System.Threading.Tasks;
 
 namespace Services.Services
 {
     public class ToDoTaskService(ApplicationDbContext Context) : IToDoTaskService
     {
-        private async Task<ToDoTask> GetToDoTask(int id)
+        private async Task<ToDoTask?> GetToDoTask(int id)
         {
-            var todotask = await Context.ToDoTasks.FindAsync(id);
-            if (todotask != null)
-            {
-                return todotask;
-            }
-            throw new InvalidOperationException("Task not found.");
+            return await Context.ToDoTasks.FindAsync(id);
         }
-        public async Task AddTask(string title, string description, int userid)
+
+        public async Task<ToDoTask> AddTask(string title, string description, int userid)
         {
             var toDoTask = new ToDoTask(title, description);
             toDoTask.UserId = userid;
             await Context.ToDoTasks.AddAsync(toDoTask);
             await Context.SaveChangesAsync();
+            return toDoTask;
         }
+
         public async Task EditTask(int id, string title, string description)
         {
             var todotask = await GetToDoTask(id);
+            if (todotask == null) throw new InvalidOperationException("Task not found.");
             todotask.Title = title;
             todotask.Description = description;
             Context.Update(todotask);
@@ -33,6 +33,7 @@ namespace Services.Services
         public async Task RemoveTask(int id)
         {
             var todotask = await GetToDoTask(id);
+            if (todotask == null) throw new InvalidOperationException("Task not found.");
             Context.Remove(todotask);
             await Context.SaveChangesAsync();
         }
@@ -40,7 +41,8 @@ namespace Services.Services
         public async Task MarkAsComplete(int id)
         {
             var todotask = await GetToDoTask(id);
-            todotask.IsCompleted = true;
+            if (todotask == null) throw new InvalidOperationException("Task not found.");
+            todotask.IsCompleted = !todotask.IsCompleted;
             Context.Update(todotask);
             await Context.SaveChangesAsync();
         }
@@ -50,15 +52,9 @@ namespace Services.Services
             return Context.ToDoTasks.Where(x => x.UserId == userid).ToListAsync();
         }
 
-        public Task<bool> UserDoesExist(int id, int userid)
+        public Task<bool> TaskBelongsToUser(int id, int userid)
         {
-            //var todotask = await Context.ToDoTasks.FindAsync(id);
             return Context.ToDoTasks.AnyAsync(x => x.UserId == userid && x.Id == id);
-        }
-
-        public Task<bool> TaskDoesExist(int userid)
-        {
-            return Context.ToDoTasks.AnyAsync(x => x.UserId == userid);
         }
     }
 }
