@@ -367,3 +367,4 @@ config.json
 
 appsettings.json
 /API/appsettings.json
+**/appsettings*.json
