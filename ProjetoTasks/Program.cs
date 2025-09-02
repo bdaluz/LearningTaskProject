@@ -4,22 +4,38 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using ProjetoTasks;
 using Services.Services;
+using Services.Interfaces;
+using Microsoft.Extensions.Configuration;
+using System.IO;
 
-
-
-
-//var builder = new ConfigurationBuilder();
-//var configuration = builder.Build();
 var serviceCollection = new ServiceCollection();
-var serviceProvider = serviceCollection.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer("Server=localhost;Integrated Security=true;Database=TaskProject;TrustServercertificate=true"))
+
+
+var configuration = new ConfigurationBuilder()
+    .SetBasePath(Directory.GetCurrentDirectory())  
+    .AddJsonFile("config.json", optional: false, reloadOnChange: true)  
+    .Build();
+
+
+serviceCollection.AddSingleton<IConfiguration>(configuration);
+
+
+serviceCollection.AddDbContext<ApplicationDbContext>(options =>
+{
+    var connectionString = configuration.GetConnectionString("DefaultConnection");  
+    options.UseSqlServer(connectionString, sqlOptions => sqlOptions.EnableRetryOnFailure());
+});
+
+serviceCollection
     .AddScoped<IToDoTaskService, ToDoTaskService>()
     .AddScoped<IUserService, UserService>()
+    .AddScoped<IEmailService, EmailService>()
     .AddScoped<ToDoTaskMenu>()
     .AddScoped<UserMenu>()
     .AddScoped<RunProgram>()
     .BuildServiceProvider();
 
-var app = serviceProvider.GetService<RunProgram>();
+var serviceProvider = serviceCollection.BuildServiceProvider();
 
+var app = serviceProvider.GetService<RunProgram>();
 app?.Run().Wait();

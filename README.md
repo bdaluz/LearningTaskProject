@@ -5,7 +5,7 @@ This repository contains a multi-project solution for managing tasks and users u
 ## Project Structure
 
 - `API/` - ASP.NET Core Web API for managing tasks and users
-- `ProjetoTasks/` - A console application used for initial development before transitioning to the API. Services integration is still pending and will be implemented soon.
+- `ProjetoTasks/` - A console application used for initial development before transitioning to the API.
 - `Services/` - Business logic and data access layer
 
 ## Prerequisites

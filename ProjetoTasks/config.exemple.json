@@ -1,0 +1,11 @@
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost;Integrated Security=true;Database=TaskProject;TrustServercertificate=true"
+  },
+  "EmailSettings": {
+    "email": "email@email.com",
+    "smtpPassword": "passwordOrAppPassword",
+    "smtpServer": "smtp.email.com",
+    "smtpPort": 587
+  }
+}
