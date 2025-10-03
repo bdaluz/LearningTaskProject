@@ -12,7 +12,8 @@
   "JwtSettings": {
     "Issuer": "JwtIssuer",
     "Audience": "JwtAudience",
-    "Key": "Super-secret-giant-password-here"
+    "Key": "Super-secret-giant-password-here",
+    "TokenValidityMins": 10
   },
   "EmailSettings": {
     "email": "youremail@mail.com",
