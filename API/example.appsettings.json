@@ -13,7 +13,8 @@
     "Issuer": "JwtIssuer",
     "Audience": "JwtAudience",
     "Key": "Super-secret-giant-password-here",
-    "TokenValidityMins": 10
+    "TokenValidityMins": 15,
+    "RefreshTokenValidityDays": 7
   },
   "EmailSettings": {
     "email": "youremail@mail.com",

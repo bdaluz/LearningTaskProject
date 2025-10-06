@@ -1,12 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Services.Data;
-using Services.Models;
 using Services.DTOs.User;
 using Services.Exceptions;
+using Services.Interfaces;
+using Services.Models;
 
 namespace Services.Services
 {
-    public class UserService(ApplicationDbContext Context) : IUserService
+    public class UserService(ApplicationDbContext Context, IAuthService authService) : IUserService
     {
         private async Task<User?> GetUsername(string username)
         {
@@ -119,6 +120,7 @@ namespace Services.Services
             user.Password = passwordHash;
             Context.Update(user);
             await Context.SaveChangesAsync();
+            await authService.DeleteAllUserRefreshTokensAsync(user.Id);
         }
 
 

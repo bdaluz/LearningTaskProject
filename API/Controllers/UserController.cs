@@ -45,7 +45,13 @@ namespace API.Controllers
             User? user = await _userservice.ValidateLogin(loginDTO.Username, loginDTO.Password);
             if (user == null)
                 return Unauthorized(new { message = "Invalid username or password." });
-            return Ok(new { token = _authservice.CreateToken(user) });   
+
+            var accessToken = _authservice.CreateToken(user);
+            var refreshToken = await _authservice.CreateRefreshTokenAsync(user.Id);
+
+            _authservice.SetRefreshTokenCookie(refreshToken.Token, HttpContext);
+
+            return Ok(new { token = accessToken });
         }
 
 
@@ -108,5 +114,50 @@ namespace API.Controllers
 
             return Ok(new { message = "Password reset successfully" });
         }
+
+
+        [Route("Refresh")]
+        [HttpPost]
+        public async Task<IActionResult> Refresh()
+        {
+            var refreshTokenValue = Request.Cookies["refreshToken"];
+            if (string.IsNullOrEmpty(refreshTokenValue))
+            {
+                return Unauthorized(new { message = "Refresh token not found." });
+            }
+
+            var refreshToken = await _authservice.ValidateRefreshTokenAsync(refreshTokenValue);
+            if (refreshToken == null)
+            {
+                return Unauthorized(new { message = "Invalid or expired refresh token." });
+            }
+
+            await _authservice.RevokeRefreshTokenAsync(refreshTokenValue);
+            var newAccessToken = _authservice.CreateToken(refreshToken.User);
+            var newRefreshToken = await _authservice.CreateRefreshTokenAsync(refreshToken.UserId);
+
+            _authservice.SetRefreshTokenCookie(newRefreshToken.Token, HttpContext);
+
+            return Ok(new { token = newAccessToken });
+        }
+
+
+        [Route("Logout")]
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> Logout()
+        {
+            var refreshTokenValue = Request.Cookies["refreshToken"];
+            
+            if (!string.IsNullOrEmpty(refreshTokenValue))
+            {
+                await _authservice.RevokeRefreshTokenAsync(refreshTokenValue);
+            }
+
+            Response.Cookies.Delete("refreshToken");
+
+            return Ok(new { message = "Logged out successfully." });
+        }
+
     }
 }

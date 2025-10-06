@@ -7,6 +7,7 @@ namespace Services.Data
     {
         public DbSet<ToDoTask> ToDoTasks { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
