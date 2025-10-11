@@ -15,13 +15,11 @@ namespace API.Controllers
     {
         private readonly IUserService _userservice;
         private readonly IAuthService _authservice;
-        private readonly IEmailService _emailservice;
 
-        public UserController(IUserService userservice, IAuthService authService, IEmailService emailService)
+        public UserController(IUserService userservice, IAuthService authService)
         {
             _userservice = userservice;
             _authservice = authService;
-            _emailservice = emailService;
         }
 
         [Authorize]
@@ -73,46 +71,36 @@ namespace API.Controllers
             return StatusCode(201, new { message = "Created new User." });
         }
 
-        [Route("SendPassReset")]
+        [Route("SendPasswordReset")]
         [HttpPost]
         public async Task<IActionResult> SendResetPasswordToken([FromBody] EmailDTO emailDTO)
         {
-            if (!await _userservice.ValidateUserEmail(emailDTO.Email)) return BadRequest(new { message = "No account found with that email address." });
+            await _userservice.PasswordResetRequest(emailDTO.Email);
 
-            string token = await _userservice.GetPasswordResetToken(emailDTO.Email);
-            await _emailservice.SendEmail(emailDTO.Email, "TaskProject - Password Reset", @"
-                            <html>
-                                <body>
-                                    <h1>Password Reset</h1>
-                                    <p>Enter your token: <strong>" + token + @"</strong></p>
-                                    <p>Click <a href='https://github.com/bdaluz/LearningTaskProject'>here</a> to reset your password.</p>
-                                    <footer>
-                                        <p>LearningTaskProject Team</p>
-                                    </footer>
-                                </body>
-                            </html>");
-
-            return Accepted(new { message = "Password reset email sent successfully." });
+            return Accepted(new { message = "If an account with that email address exists, a password reset email has been sent." });
         }
-
-        [Route("VerifyPasswordResetToken")]
-        [HttpPost]
-        public async Task<IActionResult> VerifyPasswordResetToken([FromBody] VerifyPasswordResetTokenDTO verifyPasswordResetTokenDTO)
-        {
-            if (!await _userservice.ValidateToken(verifyPasswordResetTokenDTO.Email, verifyPasswordResetTokenDTO.Token)) return BadRequest(new { message = "Invalid Token." });
-            return Ok();
-        }
-
 
         [Route("ChangePassword")]
         [HttpPost]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDTO changePasswordDTO)
         {
-            if (!await _userservice.ValidateToken(changePasswordDTO.Email, changePasswordDTO.Token)) return BadRequest(new { message = "Invalid Token." });
-
-            await _userservice.UpdatePassword(changePasswordDTO.Email, changePasswordDTO.NewPassword);
-
-            return Ok(new { message = "Password reset successfully" });
+            try
+            {
+                await _userservice.UpdatePassword(changePasswordDTO.Token, changePasswordDTO.NewPassword);
+                return Ok(new { message = "Password reset successfully" });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = "Invalid or expired token." });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = "Invalid or expired token." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An internal server error occurred. Please try again later." });
+            }
         }
 
 

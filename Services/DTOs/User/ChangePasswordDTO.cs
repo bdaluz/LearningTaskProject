@@ -9,10 +9,9 @@ namespace Services.DTOs.User
         [MaxLength(256, ErrorMessage = "Password is too long.")]
         public required string NewPassword { get; set; }
 
-        [Required(ErrorMessage = "Email is required.")]
-        public required string Email { get; set; }
 
         [Required(ErrorMessage = "Token is required.")]
+        [Length(43, 43, ErrorMessage = "Token must have 43 characters.")]
         public required string Token { get; set; }
     }
 }

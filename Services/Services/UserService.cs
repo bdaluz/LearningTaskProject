@@ -4,10 +4,12 @@ using Services.DTOs.User;
 using Services.Exceptions;
 using Services.Interfaces;
 using Services.Models;
+using System.Security.Cryptography;
 
 namespace Services.Services
 {
-    public class UserService(ApplicationDbContext Context, IAuthService authService) : IUserService
+    public class UserService(ApplicationDbContext Context, IAuthService authService,
+        IEmailService emailService) : IUserService
     {
         private async Task<User?> GetUsername(string username)
         {
@@ -87,37 +89,58 @@ namespace Services.Services
 
         public async Task<bool> ValidateUserEmail(string email)
         {
-           return await GetUserByEmail(email) != null;
+            return await GetUserByEmail(email) != null;
         }
 
-        public async Task<bool> ValidateToken(string email, string token)
+        private string GenerateSecureToken()
         {
-            var user = await GetUserByEmail(email);
-            if (user == null) return false;
-            return user.Token == token;
+            var randomNumber = new byte[32];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(randomNumber);
+
+                return Convert.ToBase64String(randomNumber)
+                    .TrimEnd('=')
+                    .Replace('+', '-')
+                    .Replace('/', '_');
+            }
         }
 
-
-        public async Task<string> GetPasswordResetToken(string email)
+        private async Task<string> GenerateAndSavePasswordResetToken(User user)
         {
-            var user = await GetUserByEmail(email);
-            await CreateToken(user);
+            user.Token = GenerateSecureToken();
+            user.ResetTokenExpiresAt = DateTime.UtcNow.AddMinutes(15);
+            Context.Update(user);
+            await Context.SaveChangesAsync();
             return user.Token;
         }
 
-        public async Task CreateToken(User user)
-        {
-            Guid id = Guid.NewGuid();
-            user.Token = id.ToString();
-            Context.Update(user);
-            await Context.SaveChangesAsync();
-        }
-
-        public async Task UpdatePassword(string email, string password)
+        public async Task PasswordResetRequest(string email)
         {
             var user = await GetUserByEmail(email);
-            string passwordHash = BCrypt.Net.BCrypt.EnhancedHashPassword(password, 11);
+
+            if (user != null)
+            {
+                string token = await GenerateAndSavePasswordResetToken(user);
+                await emailService.SendPasswordResetEmail(email, token);
+            }
+        }
+
+        public async Task UpdatePassword(string token, string newpassword)
+        {
+            var user = await Context.Users.SingleOrDefaultAsync(u =>
+                u.Token == token &&
+                u.ResetTokenExpiresAt > DateTime.UtcNow);
+
+            if (user == null)
+            {
+                throw new InvalidOperationException("Invalid Token.");
+            }
+
+            string passwordHash = BCrypt.Net.BCrypt.EnhancedHashPassword(newpassword, 11);
             user.Password = passwordHash;
+            user.Token = null;
+            user.ResetTokenExpiresAt = null;
             Context.Update(user);
             await Context.SaveChangesAsync();
             await authService.DeleteAllUserRefreshTokensAsync(user.Id);

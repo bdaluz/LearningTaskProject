@@ -16,8 +16,9 @@ namespace Services.DTOs.User
         public required string Email { get; set; }
 
         [Required(ErrorMessage = "Password is required")]
-        [MinLength(8, ErrorMessage = "Password must have at least 8 characters")]
-        [MaxLength(256, ErrorMessage = "Password is too long.")]
+        [RegularExpression(
+        @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_#^()-])[A-Za-z\d@$!%*?&_#^()-]{8,256}$",
+        ErrorMessage = "Password must be 8-256 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.")]
         public required string Password { get; set; }
     }
 }

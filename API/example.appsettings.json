@@ -21,5 +21,8 @@
     "smtpPassword": "YourEmailPasswordOrAppPassword",
     "smtpServer": "smtp.mail.com",
     "smtpPort": 587
+  },
+  "ClientSettings": {
+    "WebAppUrl": "https://localhost:4200"
   }
 }

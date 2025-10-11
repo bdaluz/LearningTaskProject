@@ -16,6 +16,7 @@ namespace Services.Models
         public ICollection<ToDoTask> Tasks { get; set; } = new List<ToDoTask>();
 
         public string? Token { get; set; }
+        public DateTime? ResetTokenExpiresAt { get; set; }
 
         public User(string username, string email, string password)
         {
