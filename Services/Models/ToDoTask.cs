@@ -6,7 +6,9 @@ namespace Services.Models
     {
         [Key]
         public int Id { get; set; }
+        [MaxLength(256)]
         public string Title { get; set; }
+        [MaxLength(2048)]
         public string Description { get; set; }
 
         public bool IsCompleted { get; set; } = false;
