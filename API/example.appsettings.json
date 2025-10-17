@@ -16,6 +16,9 @@
     "TokenValidityMins": 15,
     "RefreshTokenValidityDays": 7
   },
+  {
+    "Encryption:SecretKey": "Your32CharacterSecretKey"
+  },
   "EmailSettings": {
     "email": "youremail@mail.com",
     "smtpPassword": "YourEmailPasswordOrAppPassword",
